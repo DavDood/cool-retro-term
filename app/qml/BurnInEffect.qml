@@ -25,6 +25,8 @@ Loader {
     id: burnInEffect
 
     property ShaderEffectSource effectSource: item ? item.source : null
+    property variant contentSource: null
+    property QtObject updateTarget: null
     property bool resizing: false
 
     property real lastUpdate: 0
@@ -75,9 +77,10 @@ Loader {
             visible: false
 
             Connections {
-                target: kterminal
+                target: burnInEffect.updateTarget
+                ignoreUnknownSignals: true
 
-                onImagePainted: {
+                onSourceUpdated: {
                     completelyUpdate()
                 }
             }
@@ -112,7 +115,7 @@ Loader {
 
             property real time: timeManager.time
 
-            property variant txt_source: kterminalSource
+            property variant txt_source: burnInEffect.contentSource
             property variant burnInSource: burnInEffectSource
             property real burnInTime: burnInFadeTime
             property real burnInLastUpdate: burnInEffect.lastUpdate

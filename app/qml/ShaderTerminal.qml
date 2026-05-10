@@ -23,6 +23,8 @@ import QtQuick 2.2
 import "utils.js" as Utils
 
 Item {
+    id: shaderTerminal
+
     function dynamicFragmentPath() {
         var rasterMode = appSettings.rasterization;
         var burnInOn = appSettings.burnIn > 0 ? 1 : 0;
@@ -48,14 +50,15 @@ Item {
     }
 
     property ShaderEffectSource source
-    property BurnInEffect burnInEffect
+    property var burnInEffect
     property ShaderEffectSource bloomSource
 
     property color fontColor: appSettings.fontColor
     property color backgroundColor: appSettings.backgroundColor
+    property real normalizedWindowScale: 1.0
 
-    property real screenCurvature: appSettings.screenCurvature * appSettings.screenCurvatureSize * terminalWindow.normalizedWindowScale
-    property real frameSize: appSettings.frameSize * terminalWindow.normalizedWindowScale
+    property real screenCurvature: appSettings.screenCurvature * appSettings.screenCurvatureSize * normalizedWindowScale
+    property real frameSize: appSettings.frameSize * normalizedWindowScale
 
     property real chromaColor: appSettings.chromaColor
 
@@ -73,7 +76,7 @@ Item {
         id: dynamicShader
 
         property ShaderEffectSource screenBuffer: frameBuffer
-        property ShaderEffectSource burnInSource: burnInEffect.effectSource
+        property ShaderEffectSource burnInSource: burnInEffect ? burnInEffect.effectSource : null
         property ShaderEffectSource frameSource: terminalFrameLoader.item
 
         property color fontColor: parent.fontColor
@@ -89,8 +92,8 @@ Item {
 
         // Fast burnin properties
         property real burnIn: appSettings.burnIn
-        property real burnInLastUpdate: burnInEffect.lastUpdate
-        property real burnInTime: burnInEffect.burnInFadeTime
+        property real burnInLastUpdate: burnInEffect ? burnInEffect.lastUpdate : 0
+        property real burnInTime: burnInEffect ? burnInEffect.burnInFadeTime : 0
 
         property real jitter: appSettings.jitter
         property size jitterDisplacement: Qt.size(0.007 * jitter, 0.002 * jitter)
@@ -153,6 +156,7 @@ Item {
 
             TerminalFrame {
                 id: terminalFrame
+                normalizedWindowScale: shaderTerminal.normalizedWindowScale
                 blending: false
                 anchors.fill: parent
             }

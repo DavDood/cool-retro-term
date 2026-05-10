@@ -21,6 +21,13 @@
         <file>Storage.qml</file>
         <file>SettingsAdvancedTab.qml</file>
         <file>TerminalContainer.qml</file>
+        <file>RenderTimeSource.qml</file>
+        <file>RenderBurnInEffect.qml</file>
+        <file>RenderProgressWindow.qml</file>
+        <file>RenderSurface.qml</file>
+        <file>TerminalBurnInEffect.qml</file>
+        <file>RenderFrameView.qml</file>
+        <file>RenderWindow.qml</file>
         <file>TerminalTabs.qml</file>
         <file>images/crt256.png</file>
         <file>utils.js</file>

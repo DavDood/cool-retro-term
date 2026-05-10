@@ -22,6 +22,7 @@ import QtQuick 2.0
 import "utils.js" as Utils
 
 ShaderEffect {
+    property real normalizedWindowScale: 1.0
     property color _staticFrameColor: Utils.sum(appSettings.frameColor, Qt.rgba(0.1, 0.1, 0.1, 1.0))
     property color _backgroundColor: appSettings.backgroundColor
     property color _fontColor: appSettings.fontColor
@@ -33,11 +34,11 @@ ShaderEffect {
         0.125 + 0.750 * ambientLight
     )
 
-    property real screenCurvature: appSettings.screenCurvature * appSettings.screenCurvatureSize * terminalWindow.normalizedWindowScale
+    property real screenCurvature: appSettings.screenCurvature * appSettings.screenCurvatureSize * normalizedWindowScale
 
     property real frameShininess: appSettings.frameShininess
 
-    property real frameSize: appSettings.frameSize * terminalWindow.normalizedWindowScale
+    property real frameSize: appSettings.frameSize * normalizedWindowScale
 
     property real screenRadius: appSettings.screenRadius
 

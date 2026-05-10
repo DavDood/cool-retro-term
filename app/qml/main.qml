@@ -28,8 +28,20 @@ QtObject {
         onInitializedSettings: appRoot.createWindow()
     }
 
+    property bool renderMode: renderController && renderController.renderMode
+    property Loader renderTimeSourceLoader: Loader {
+        active: renderMode
+        source: active ? "RenderTimeSource.qml" : ""
+    }
+
     property TimeManager timeManager: TimeManager {
-        enableTimer: windowsModel.count > 0
+        externalTimeSource: renderTimeSourceLoader.item
+        hasVisibleWindows: windowsModel.count > 0
+        hasContinuousAnimation: appSettings.staticNoise > 0
+            || appSettings.glowingLine > 0
+            || appSettings.jitter > 0
+            || appSettings.horizontalSync > 0
+            || appSettings.flickering > 0
     }
 
     property SettingsWindow settingsWindow: SettingsWindow {
@@ -46,12 +58,36 @@ QtObject {
 
     property ListModel windowsModel: ListModel { }
 
+    property bool initialFullscreenRequested: Qt.application.arguments.indexOf("--fullscreen") !== -1
+
     function createWindow() {
-        var window = windowComponent.createObject(null)
+        if (renderMode) {
+            var progressComponent = Qt.createComponent("qrc:/RenderProgressWindow.qml")
+            if (progressComponent.status !== Component.Ready) {
+                console.log(progressComponent.errorString())
+                return
+            }
+
+            var progressWindow = progressComponent.createObject(null)
+            if (!progressWindow) {
+                return
+            }
+
+            windowsModel.append({ window: progressWindow })
+            initialFullscreenRequested = false
+            progressWindow.show()
+            progressWindow.requestActivate()
+            return
+        }
+
+        var window = windowComponent.createObject(null, {
+            fullscreen: initialFullscreenRequested
+        })
         if (!window)
             return
 
         windowsModel.append({ window: window })
+        initialFullscreenRequested = false
         window.show()
         window.requestActivate()
     }

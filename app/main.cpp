@@ -21,6 +21,7 @@
 #include <fileio.h>
 #include <fontlistmodel.h>
 #include <fontmanager.h>
+#include <videorendercontroller.h>
 
 #if defined(Q_OS_MAC)
 #include <CoreFoundation/CoreFoundation.h>
@@ -64,7 +65,7 @@ int main(int argc, char *argv[])
 
     if (argc>1 && (!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help"))) {
         QTextStream cout(stdout, QIODevice::WriteOnly);
-        cout << "Usage: " << argv[0] << " [--default-settings] [--workdir <dir>] [--program <prog>] [-p|--profile <prof>] [--fullscreen] [-h|--help]" << Qt::endl;
+        cout << "Usage: " << argv[0] << " [--default-settings] [--workdir <dir>] [--program <prog>] [-p|--profile <prof>] [--fullscreen] [--render-video <file>] [--render-output <file>] [-h|--help]" << Qt::endl;
         cout << "  --default-settings  Run cool-retro-term with the default settings" << Qt::endl;
         cout << "  --workdir <dir>     Change working directory to 'dir'" << Qt::endl;
         cout << "  -e <cmd>            Command to execute. This option will catch all following arguments, so use it as the last option." << Qt::endl;
@@ -72,6 +73,8 @@ int main(int argc, char *argv[])
         cout << "  -p|--profile <prof> Run cool-retro-term with the given profile." << Qt::endl;
         cout << "  -h|--help           Print this help." << Qt::endl;
         cout << "  --verbose           Print additional information such as profiles and settings." << Qt::endl;
+        cout << "  --render-video <f>  Render an existing video through the CRT shader pipeline." << Qt::endl;
+        cout << "  --render-output <f> Output file for --render-video mode. Defaults to <input>-crt.mp4." << Qt::endl;
         return 0;
     }
 
@@ -90,9 +93,16 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain(QStringLiteral("cool-retro-term"));
     app.setApplicationVersion(appVersion);
 
+    // Render jobs must run in their own process instead of asking an existing instance
+    // to open a normal terminal window.
+    const QStringList args = app.arguments();
+    const QString renderVideoInput = getNamedArgument(args, QStringLiteral("--render-video"));
+    const QString renderVideoOutput = getNamedArgument(args, QStringLiteral("--render-output"));
+    const bool renderVideoMode = !renderVideoInput.isEmpty();
+
     KDSingleApplication singleApp(QStringLiteral("cool-retro-term"));
 
-    if (!singleApp.isPrimaryInstance()) {
+    if (!renderVideoMode && !singleApp.isPrimaryInstance()) {
         if (singleApp.sendMessage("new-window"))
             return 0;
         qWarning() << "KDSingleApplication: primary not reachable, continuing as independent instance.";
@@ -114,8 +124,6 @@ int main(int argc, char *argv[])
 #endif
 
     // Manage command line arguments from the cpp side
-    QStringList args = app.arguments();
-
     // Manage default command
     QStringList cmdList;
     if (args.contains("-e")) {
@@ -123,6 +131,20 @@ int main(int argc, char *argv[])
     }
     QVariant command(cmdList.empty() ? QVariant() : cmdList[0]);
     QVariant commandArgs(cmdList.size() <= 1 ? QVariant() : QVariant(cmdList.mid(1)));
+
+    QStringList ignoredRenderArguments;
+    if (renderVideoMode) {
+      if (args.contains(QStringLiteral("-e"))) {
+        ignoredRenderArguments << QStringLiteral("-e");
+      }
+      if (args.contains(QStringLiteral("--workdir"))) {
+        ignoredRenderArguments << QStringLiteral("--workdir");
+      }
+    }
+    VideoRenderController renderController;
+    renderController.configureRenderJob(renderVideoInput, renderVideoOutput, ignoredRenderArguments);
+
+    engine.rootContext()->setContextProperty("renderController", &renderController);
     engine.rootContext()->setContextProperty("appVersion", appVersion);
     engine.rootContext()->setContextProperty("defaultCmd", command);
     engine.rootContext()->setContextProperty("defaultCmdArgs", commandArgs);

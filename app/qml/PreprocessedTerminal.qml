@@ -289,8 +289,10 @@ Item{
                 : kterminal.totalHeight * scaleTexture * appSettings.burnInQuality)
 
 
-        BurnInEffect {
+        TerminalBurnInEffect {
             id: burnInEffect
+            terminalSourceTarget: kterminal
+            contentSource: kterminalSource
         }
     }
 }

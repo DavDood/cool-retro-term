@@ -24,22 +24,105 @@ QtObject {
 
     property bool enableTimer: false
     property real time: 0
+    property QtObject externalTimeSource: null
+    property bool externalTimeEnabled: externalTimeSource !== null
+
+    property bool hasVisibleWindows: false
+    property bool hasContinuousAnimation: false
+    property bool hasTemporaryAnimation: false
+    property real temporaryAnimationDeadline: 0
+    property real timeOriginInSeconds: Date.now() / 1000
 
     property int framesPerUpdate: Math.max(1, appSettings.effectsFrameSkip)
     property int _frameCounter: 0
 
-    property var frameDriver: FrameAnimation {
-        running: enableTimer
+    function nowInSeconds() {
+        return Date.now() / 1000 - timeOriginInSeconds
+    }
+
+    function updateTimerState() {
+        if (externalTimeEnabled) {
+            enableTimer = true
+            time = externalTimeSource.time
+            return
+        }
+
+        enableTimer = hasVisibleWindows && (hasContinuousAnimation || hasTemporaryAnimation)
+    }
+
+    function scheduleTemporaryAnimationStop() {
+        var remainingMs = Math.max(0, Math.ceil((temporaryAnimationDeadline - nowInSeconds()) * 1000))
+
+        if (remainingMs <= 0) {
+            hasTemporaryAnimation = false
+            updateTimerState()
+            return
+        }
+
+        temporaryAnimationTimer.interval = remainingMs
+        temporaryAnimationTimer.restart()
+    }
+
+    function requestTemporaryAnimation(durationSeconds) {
+        if (externalTimeEnabled) {
+            time = externalTimeSource.time
+            return
+        }
+
+        if (durationSeconds <= 0) {
+            return
+        }
+
+        time = nowInSeconds()
+        temporaryAnimationDeadline = Math.max(temporaryAnimationDeadline, time + durationSeconds)
+        hasTemporaryAnimation = true
+        updateTimerState()
+        scheduleTemporaryAnimationStop()
+    }
+
+    property var frameDriver: Timer {
+        interval: 16
+        repeat: true
+        running: !externalTimeEnabled && enableTimer
         onTriggered: {
             timeManager._frameCounter += 1
 
             if (timeManager._frameCounter >= timeManager.framesPerUpdate) {
-                time = elapsedTime
+                time = timeManager.nowInSeconds()
                 timeManager._frameCounter = 0
             }
         }
     }
 
+    property var temporaryAnimationTimer: Timer {
+        repeat: false
+        running: false
+        onTriggered: {
+            timeManager.time = timeManager.nowInSeconds()
+
+            if (timeManager.temporaryAnimationDeadline > timeManager.time) {
+                timeManager.scheduleTemporaryAnimationStop()
+                return
+            }
+
+            timeManager.hasTemporaryAnimation = false
+            timeManager.updateTimerState()
+        }
+    }
+
+    property var externalTimeConnection: Connections {
+        target: externalTimeSource
+        ignoreUnknownSignals: true
+
+        onTimeChanged: {
+            timeManager.time = externalTimeSource.time
+        }
+    }
+
     onEnableTimerChanged: if (!enableTimer) _frameCounter = 0
     onFramesPerUpdateChanged: _frameCounter = 0
+    onExternalTimeEnabledChanged: updateTimerState()
+    onHasVisibleWindowsChanged: updateTimerState()
+    onHasContinuousAnimationChanged: updateTimerState()
+    onHasTemporaryAnimationChanged: updateTimerState()
 }

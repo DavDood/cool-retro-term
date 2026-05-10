@@ -19,11 +19,13 @@ DESTDIR = $$OUT_PWD/../
 
 HEADERS += \
     fileio.h \
+    videorendercontroller.h \
     fontmanager.h \
     fontlistmodel.h
 
 SOURCES += main.cpp \
     fileio.cpp \
+    videorendercontroller.cpp \
     fontmanager.cpp \
     fontlistmodel.cpp
 
