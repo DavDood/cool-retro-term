@@ -197,4 +197,16 @@ Item {
         sourceItem: staticShader
         hideSource: true
     }
+
+    CurvedGlassOverlay {
+        anchors.fill: parent
+        z: 1
+
+        screenCurvature: parent.screenCurvature
+        frameSize: parent.frameSize
+        screenRadius: appSettings.screenRadius
+        windowScaling: appSettings.windowScaling
+        curvedGlass: appSettings.curvedGlass
+        curvedGlassHighlightBurn: appSettings.curvedGlassHighlightBurn
+    }
 }

@@ -73,6 +73,8 @@ QtObject {
 
     property real staticNoise: 0.12
     property real screenCurvature: 0.3
+    property real curvedGlass: 0.0
+    property real curvedGlassHighlightBurn: 0.50
     property real glowingLine: 0.2
     property real burnIn: 0.25
     property real bloom: 0.55
@@ -182,6 +184,8 @@ QtObject {
             "chromaColor": chromaColor,
             "saturationColor": saturationColor,
             "screenCurvature": screenCurvature,
+            "curvedGlass": curvedGlass,
+            "curvedGlassHighlightBurn": curvedGlassHighlightBurn,
             "glowingLine": glowingLine,
             "burnIn": burnIn,
             "bloom": bloom,
@@ -278,6 +282,8 @@ QtObject {
                 !== undefined ? settings.saturationColor : saturationColor
         screenCurvature = settings.screenCurvature
                 !== undefined ? settings.screenCurvature : screenCurvature
+        curvedGlass = settings.curvedGlass !== undefined ? settings.curvedGlass : 0.0
+        curvedGlassHighlightBurn = settings.curvedGlassHighlightBurn !== undefined ? settings.curvedGlassHighlightBurn : 0.50
         glowingLine = settings.glowingLine !== undefined ? settings.glowingLine : glowingLine
 
         burnIn = settings.burnIn !== undefined ? settings.burnIn : burnIn

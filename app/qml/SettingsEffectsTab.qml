@@ -26,14 +26,22 @@ ColumnLayout {
     Layout.fillHeight: true
     spacing: 2
 
-    GroupBox {
-        title: qsTr("Effects")
+    Flickable {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        padding: appSettings.defaultMargin
+        boundsBehavior: Flickable.StopAtBounds
+        clip: true
+        contentWidth: width
+        contentHeight: effectsGroup.implicitHeight
 
-        ColumnLayout {
-            anchors.fill: parent
+        GroupBox {
+            id: effectsGroup
+            title: qsTr("Effects")
+            width: parent.width
+            padding: appSettings.defaultMargin
+
+            ColumnLayout {
+                width: parent.width
 
             CheckableSlider {
                 name: qsTr("Bloom")
@@ -66,6 +74,16 @@ ColumnLayout {
                 value: appSettings.screenCurvature
             }
             CheckableSlider {
+                name: qsTr("Curved Glass")
+                onNewValue: function(newValue) { appSettings.curvedGlass = newValue }
+                value: appSettings.curvedGlass
+            }
+            CheckableSlider {
+                name: qsTr("Glass Highlight Burn")
+                onNewValue: function(newValue) { appSettings.curvedGlassHighlightBurn = newValue }
+                value: appSettings.curvedGlassHighlightBurn
+            }
+            CheckableSlider {
                 name: qsTr("Ambient Light")
                 onNewValue: function(newValue) { appSettings.ambientLight = newValue }
                 value: appSettings.ambientLight
@@ -92,5 +110,6 @@ ColumnLayout {
                 value: appSettings._frameShininess
             }
         }
+    }
     }
 }
